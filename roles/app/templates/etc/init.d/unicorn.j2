@@ -1,0 +1,64 @@
+#!/bin/sh
+set -e
+
+TIMEOUT=${TIMEOUT-60}
+APP_ROOT=/home/{{ unicorn_user }}/app/current
+PID_FILE=/home/{{ unicorn_user }}/app/shared/pids/unicorn.pid
+ENVIRONMENT=production
+USER={{ unicorn_user }}
+CMD="cd $APP_ROOT; bin/unicorn -E $ENVIRONMENT -D -c /home/{{ unicorn_user }}/app/shared/config/unicorn.rb"
+action="$1"
+set -u
+
+cd $APP_ROOT || exit 1
+
+sig () {
+  test -s "$PID_FILE" && kill -$1 `cat $PID_FILE`
+}
+
+workersig () {
+  workerpid="/home/{{ unicorn_user }}/app/shared/pids/unicorn.$2.pid"
+  test -s "$workerpid" && kill -$1 `cat $workerpid`
+}
+
+case $action in
+start)
+  sig 0 && echo >&2 "Already running" && exit 0
+  su - $USER -c "$CMD"
+  ;;
+stop)
+  sig QUIT && exit 0
+  echo >&2 "Not running"
+  ;;
+force-stop)
+  sig TERM && exit 0
+  echo >&2 "Not running"
+  ;;
+restart)
+  sig QUIT
+  sleep 5
+  su - $USER -c "$CMD"
+  ;;
+reload)
+  sig HUP && echo reloaded OK && exit 0
+  echo >&2 "Couldn't reload, starting '$CMD' instead"
+  su - $USER -c "$CMD"
+  ;;
+upgrade)
+  . /home/{{ unicorn_user }}/.profile
+  sig USR2 && echo Upgraded ok && exit 0
+  echo >&2 "Couldn't upgrade, starting '$CMD' instead"
+  su - $USER -c "$CMD"
+  ;;
+kill_worker)
+  workersig QUIT $2 && exit 0
+  echo >&2 "Worker not running"
+  ;;
+reopen-logs)
+  sig USR1
+  ;;
+*)
+  echo >&2 "Usage: $0 <start|stop|restart|upgrade|force-stop|reopen-logs>"
+  exit 1
+  ;;
+esac

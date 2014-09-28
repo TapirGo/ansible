@@ -1,0 +1,36 @@
+base_directory = '/home/tapirgo/app'
+log_directory = '/var/log/unicorn'
+
+worker_processes {{ unicorn_worker_processes }}
+working_directory "#{base_directory}/current"
+
+listen '/tmp/.unicornsock', :backlog => 64
+
+timeout 30
+pid "#{base_directory}/shared/pids/unicorn.pid"
+old_pid = "#{base_directory}/shared/pids/unicorn.pid.oldbin"
+stderr_path "#{log_directory}/stderr.log"
+stdout_path "#{log_directory}/stdout.log"
+
+check_client_connection false
+
+preload_app true
+if GC.respond_to?(:copy_on_write_friendly=)
+  GC.copy_on_write_friendly = true
+end
+
+before_fork do |server, worker|
+  ENV['BUNDLE_GEMFILE'] = "#{base_directory}/current/Gemfile"
+  if server.pid != old_pid && File.exists?(old_pid)
+    begin
+      Process.kill('QUIT', File.read(old_pid).to_i)
+    rescue Errno::ENOENT, Errno::ESRCH
+      puts 'Old master already dead'
+    end
+  end
+end
+
+after_fork do |server, worker|
+  child_pid = server.config[:pid].sub('.pid', ".#{worker.nr}.pid")
+  system("echo #{Process.pid} > #{child_pid}")
+end

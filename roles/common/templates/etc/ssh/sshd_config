@@ -1,0 +1,13 @@
+AuthorizedKeysFile %h/.ssh/authorized_keys
+ChallengeResponseAuthentication no
+ClientAliveCountMax 3
+ClientAliveInterval 60
+HostbasedAuthentication no
+PasswordAuthentication no
+Protocol 2
+StrictModes yes
+Subsystem sftp /usr/lib/openssh/sftp-server
+TCPKeepAlive no
+UsePAM yes
+UsePrivilegeSeparation yes
+X11Forwarding no

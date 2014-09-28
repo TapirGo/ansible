@@ -1,0 +1,14 @@
+---
+
+- name: Create /var/log/unicorn
+  file: path=/var/log/unicorn
+        state=directory
+        owner={{ unicorn_user }} group=root mode=0755
+
+- name: Set Unicorn init.d script
+  template: dest=/etc/init.d/unicorn
+            src=etc/init.d/unicorn.j2
+            owner={{ unicorn_user }} group={{ unicorn_user }} mode=0755
+
+- name: Ensure Unicorn is enabled and started
+  service: name=unicorn enabled=yes state=started

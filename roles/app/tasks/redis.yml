@@ -1,0 +1,22 @@
+---
+
+- name: Add Redis PPA
+  apt_repository: repo='ppa:chris-lea/redis-server' update_cache=yes
+
+- name: Install Redis
+  apt: pkg=redis-server state=installed
+
+- name: Set /etc/sysctl.conf
+  template: dest=/etc/sysctl.conf
+            src=etc/sysctl.conf
+            owner=root group=root mode=0644
+  notify: Restart redis-server
+
+- name: Set /etc/redis/redis.conf
+  template: dest=/etc/redis/redis.conf
+            src=etc/redis/redis.conf
+            owner=root group=root mode=0644
+  notify: Restart redis-server
+
+- name: Ensure Redis is enabled and started
+  service: name=redis-server enabled=yes state=started

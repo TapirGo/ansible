@@ -1,0 +1,8 @@
+table filter {
+    chain INPUT {
+        # allow HTTP connections
+        proto tcp dport http ACCEPT;
+        # allow HTTPS connections
+        proto tcp dport https ACCEPT;
+    }
+}

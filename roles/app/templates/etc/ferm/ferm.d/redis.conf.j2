@@ -1,0 +1,10 @@
+domain ip {
+  table filter {
+      chain INPUT {
+        # allow HTTP connections
+          {% for host in groups['app'] %}
+          saddr {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }} proto tcp dport 6379 ACCEPT;
+          {% endfor %}
+    }
+  }
+}

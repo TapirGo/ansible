@@ -1,0 +1,53 @@
+---
+
+
+- name: Create /opt/ruby directory
+  file: path=/opt/ruby
+        state=directory
+        owner=root group=root mode=0755
+
+- name: Create /root/src directory
+  file: path=/root/src
+        state=directory
+        owner=root group=root mode=0755
+
+- name: Check wether current Ruby version is already present
+  stat: path=/opt/ruby/{{ ruby_version }}
+  register: ruby_path
+
+- name: Download Ruby source
+  get_url: url=http://cache.ruby-lang.org/pub/ruby/2.1/ruby-{{ ruby_version }}.tar.gz
+           dest=/root/src
+
+- name: Extract Ruby source
+  command: tar -zxvf ruby-{{ ruby_version }}.tar.gz chdir=/root/src
+
+- name: Compile Ruby
+  command: "{{ item }} chdir=/root/src/ruby-{{ ruby_version }}"
+  with_items:
+    - ./configure --prefix=/opt/ruby/{{ ruby_version }} LIBS="-ljemalloc" CFLAGS="-march=nocona -O2 -pipe"
+    - make
+    - make install
+
+- name: Install bundler
+  command: /opt/ruby/{{ ruby_version }}/bin/gem install bundler
+
+- name: Symlink Ruby executables
+  file: src=/opt/ruby/{{ ruby_version }}/bin/{{ item }}
+        path=/usr/local/bin/{{ item }}
+        owner=root group=root mode=0755
+        state=link
+  with_items:
+    - bundle
+    - bundler
+    - erb
+    - gem
+    - irb
+    - rake
+    - rdoc
+    - ri
+    - ruby
+    - testrb
+  notify:
+    - Upgrade unicorn
+    - Restart sidekiq-manager

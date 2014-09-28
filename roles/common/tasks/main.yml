@@ -1,0 +1,159 @@
+---
+
+- name: Set sshd configuration
+  template: src=etc/ssh/sshd_config
+            dest=/etc/ssh/sshd_config
+            owner=0 group=0 mode=0644
+            validate='/usr/sbin/sshd -T -f %s'
+  notify: Restart ssh
+
+- name: Generate nl_NL.UTF-8 locale
+  command: locale-gen nl_NL.UTF-8
+
+- name: Create swap space
+  command: 'fallocate -l {{ swap_size }} /swapfile'
+  when: ansible_swaptotal_mb < 1
+
+- name: Make swap
+  command: mkswap /swapfile
+  when: ansible_swaptotal_mb < 1
+
+- name: Set swap permissions
+  file: path=/swapfile
+        owner=root group=root mode=0600
+  when: ansible_swaptotal_mb < 1
+
+- name: Turn swap on
+  command: swapon -a
+  when: ansible_swaptotal_mb < 1
+
+- name: Set swapiness
+  shell: echo 0 | sudo tee /proc/sys/vm/swappiness
+
+- name: Add swap to fstab
+  action: lineinfile dest=/etc/fstab regexp="swapfile" line="/swapfile none swap sw 0 0" state=present
+  when: ansible_swaptotal_mb < 1
+
+- name: Set system limits
+  template: src=etc/security/limits.conf
+            dest=/etc/security/limits.conf
+            owner=root group=root mode=0644
+
+- name: Enable system limits for pam common-session
+  template: src=etc/pam.d/common-session
+            dest=/etc/pam.d/common-session
+            owner=root group=root mode=0644
+
+- name: Enable system limits for pam common-session-noninteractive
+  template: src=etc/pam.d/common-session
+            dest=/etc/pam.d/common-session-noninteractive
+            owner=root group=root mode=0644
+
+- name: Set timezone to UTC
+  template: src=etc/timezone
+            dest=/etc/timezone
+            owner=root group=root mode=0644
+  notify: Reconfigure tzdata
+
+- name: Set system hostname
+  hostname: name={{ inventory_hostname.replace('.tapirgo.com', '') }}
+  tags: hosts
+
+- name: Set hosts file
+  template: src=etc/hosts.j2
+            dest=/etc/hosts
+            owner=root group=root mode=0644
+  tags: hosts
+
+- name: Set /etc/apt/source.list
+  template: src=etc/apt/sources.list
+            dest=/etc/apt/sources.list
+            owner=root group=root mode=0644
+  tags: apt-get-upgrade
+
+- name: Update apt cache
+  apt: update-cache=yes
+  tags: apt-get-upgrade
+
+- name: Upgrade packages
+  apt: upgrade=safe
+  tags: apt-get-upgrade
+
+- name: Uninstall unwanted packages
+  apt: pkg={{item}} state=absent
+  with_items:
+    - ufw
+
+- name: Install common packages
+  apt: pkg={{item}} state=installed
+  with_items:
+    - screen
+    - apt-transport-https
+    - htop
+    - iotop
+    - slurm
+    - strace
+    - gdb
+    - mtr
+    - fail2ban
+    - ntp
+    - vim
+    - ferm
+    - mosh
+    - git-core
+    - autoconf
+    - binutils-doc
+    - bison
+    - build-essential
+    - flex
+    - libtool
+    - libreadline6
+    - libreadline6-dev
+    - libjemalloc-dev # For better Ruby memory management
+    - ruby # We need Ruby to be able to compile Ruby :-)
+    - gcc-4.7
+    - g++-4.7
+    - scons
+    - libssl-dev
+    - libboost-filesystem-dev
+    - libboost-program-options-dev
+    - libboost-system-dev
+    - libboost-thread-dev
+    - nodejs
+    - openjdk-6-jdk
+    - libcurl4-gnutls-dev
+    - libxslt-dev
+    - libxml2-dev
+
+- name: Set fail2ban configuration
+  template: src=etc/fail2ban/jail.local
+            dest=/etc/fail2ban/jail.local
+            owner=root group=root mode=0644
+  notify: Reload fail2ban
+
+- name: Ensure fail2ban is started and enabled
+  service: name=fail2ban state=started enabled=yes
+
+- name: Check if ferm is installed to skip when running hosts before a full run
+  stat: path=/etc/init.d/ferm
+  register: ferm_init
+  tags:
+    - hosts
+    - app
+
+- name: Add ferm config directory for additional config files
+  file: path=/etc/ferm/ferm.d
+        state=directory
+        owner=root group=root mode=0700
+  tags: firewall
+
+- name: Set ferm config
+  template: dest=/etc/ferm/ferm.conf
+            src=etc/ferm/ferm.conf
+            owner=root group=root mode=0644
+  notify: Restart ferm
+  tags: firewall
+
+- name: Ensure ferm is enabled
+  service: name=ferm enabled=yes
+  tags: firewall

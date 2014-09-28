@@ -1,0 +1,41 @@
+---
+
+- name: Add Nginx PPA
+  apt_repository: repo='ppa:nginx/stable' update_cache=yes
+
+- name: Install Nginx
+  apt: pkg=nginx
+
+- name: Configure logrotate for Nginx
+  template: dest=/etc/logrotate.d/nginx
+            src=etc/logrotate.d/nginx
+            owner=root group=root mode=0644
+
+- name: Set Nginx config
+  template: dest=/etc/nginx/nginx.conf
+            src=etc/nginx/nginx.conf
+            owner=root group=root mode=0644
+  notify: Restart nginx
+
+- name: Remove default site config
+  file: path={{item}}
+        state=absent
+  notify: Restart nginx
+  with_items:
+    - /etc/nginx/sites-available/default
+    - /etc/nginx/sites-enabled/default
+
+- name: Set tapirgo Nginx config
+  template: dest=/etc/nginx/sites-available/tapirgo
+            src=etc/nginx/sites-available/tapirgo
+            owner=root group=root mode=0644
+  notify: Restart nginx
+
+- name: Symlink tapirgo site config
+  file: src=/etc/nginx/sites-available/tapirgo
+        path=/etc/nginx/sites-enabled/tapirgo
+        state=link
+  notify: Restart nginx
+
+- name: Ensure Nginx is enabled and started
+  service: name=nginx enabled=yes state=started

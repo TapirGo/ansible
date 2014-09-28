@@ -1,0 +1,9 @@
+/home/push/app/shared/log/*.log {
+  weekly
+  missingok
+  rotate 4
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+}

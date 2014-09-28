@@ -1,0 +1,27 @@
+---
+
+- name: Restart nginx
+  service: name=nginx state=restarted
+
+- name: Restart redis-server
+  service: name=redis-server state=restarted
+
+- name: Restart unicorn
+  command: service unicorn restart
+
+- name: Upgrade unicorn
+  command: service unicorn upgrade
+
+- name: Restart sidekiq-manager
+  service: name=sidekiq-manager state=restarted
+
+- name: Restart mongodb
+  service: name=mongodb state=restarted
+
+- name: Trigger mongodb logrotate
+  shell: "/bin/kill -SIGUSR1 'cat /var/lib/mongodb/mongod.lock 2> /dev/null' 2> /dev/null || true"
+
+- name: "Restart Elasticsearch"
+  service: name=elasticsearch state=restarted
+
+- include: ../../../handlers.yml

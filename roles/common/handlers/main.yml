@@ -1,0 +1,10 @@
+---
+
+- name: Restart ssh
+  service: name=ssh state=restarted
+
+- name: Reconfigure tzdata
+  command: /usr/sbin/dpkg-reconfigure -f noninteractive tzdata
+
+- name: Reload fail2ban
+  service: name=fail2ban state=reloaded

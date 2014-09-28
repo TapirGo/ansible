@@ -1,0 +1,84 @@
+---
+
+- name: Create tapirgo user
+  user: name=tapirgo
+        shell=/bin/bash
+
+- name: Set environment for tapirgo
+  template: dest=/home/tapirgo/{{ item }}
+            src=home/tapirgo/environment.j2
+            owner=tapirgo group=tapirgo mode=0600
+  with_items:
+    - .profile
+    - .bashrc
+  notify:
+    - Restart unicorn
+    - Restart sidekiq-manager
+  tags: app_config
+
+- name: Sudo permissions to restart unicorn and sidekiq
+  template: dest=/etc/sudoers.d/tapirgo
+            src=etc/sudoers.d/tapirgo
+            owner=root group=root mode=0440
+
+- name: Place authorized_keys for tapirgo
+  authorized_key: user=tapirgo
+                  key='{{ item }}'
+  with_file:
+    - ../../common/files/keys/robert.pub
+    - ../../common/files/keys/thijs.pub
+
+- name: Create app directory for tapirgo
+  file: path=/home/tapirgo/app
+        state=directory
+        owner=tapirgo group=tapirgo mode=0755
+
+- name: Create app subdirectories for tapirgo
+  file: path=/home/tapirgo/app/{{ item }}
+        state=directory
+        owner=tapirgo group=tapirgo mode=0755
+  with_items:
+    - releases
+    - shared
+    - shared/log
+    - shared/pids
+    - shared/config
+
+- name: Set Unicorn config
+  template: dest=/home/tapirgo/app/shared/config/unicorn.rb
+            src=home/tapirgo/app/shared/config/unicorn.rb.j2
+            owner=tapirgo group=tapirgo mode=0644
+  notify: Restart unicorn
+  tags: app_config
+
+- name: Configure logrotate for tapirgo
+  template: dest=/etc/logrotate.d/tapirgo
+            src=etc/logrotate.d/tapirgo
+            owner=root group=root mode=0644
+
+- name: Set Sidekiq init config
+  template: dest=/etc/init/sidekiq.conf
+            src=etc/init/sidekiq.conf
+            owner=tapirgo group=tapirgo mode=0644
+  notify: Restart sidekiq-manager
+  tags: app_config
+
+- name: Set Sidekiq manager init config
+  template: dest=/etc/init/sidekiq-manager.conf
+            src=etc/init/sidekiq-manager.conf.j2
+            owner=tapirgo group=tapirgo mode=0644
+  notify: Restart sidekiq-manager
+  tags: app_config
+
+- name: Ensure Sidekiq is enabled and started
+  service: name=sidekiq-manager enabled=yes state=started
+
+#- name: Set nightman crontab
+#  cron: name="run nightman"
+#        user=tapirgo
+#        hour=6
+#        minute=0
+#        job=". /home/tapirgo/.profile && cd /home/tapirgo/app/current && /usr/local/bin/ruby bin/rake nightman:all --silent >> #/home/tapirgo/app/shared/log/cron.log 2>&1"
+#        state=present
+#  when: process_runner == 'on'
+- include: unicorn.yml

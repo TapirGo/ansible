@@ -1,0 +1,34 @@
+---
+
+- name: Install NodeJS
+  apt: pkg=nodejs state=installed
+
+- include: nginx.yml
+  tags: nginx
+
+- include: redis.yml
+  tags: redis
+
+- include: ruby.yml
+  tags: ruby
+
+- include: mongodb.yml
+  tags: mongodb
+
+- include: elasticsearch.yml
+  tags: elasticsearch
+
+- include: tapirgo.yml
+  tags: tapirgo
+
+- name: Set ferm config for app servers
+  template: dest=/etc/ferm/ferm.d/{{ item }}.conf
+            src=etc/ferm/ferm.d/{{ item }}.conf.j2
+            owner=root group=root mode=0644
+  notify: Restart ferm
+  with_items:
+    - app
+    - redis
+  tags:
+    - hosts
+    - firewall
