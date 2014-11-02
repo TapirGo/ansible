@@ -73,12 +73,4 @@
 - name: Ensure Sidekiq is enabled and started
   service: name=sidekiq-manager enabled=yes state=started
 
-#- name: Set nightman crontab
-#  cron: name="run nightman"
-#        user=tapirgo
-#        hour=6
-#        minute=0
-#        job=". /home/tapirgo/.profile && cd /home/tapirgo/app/current && /usr/local/bin/ruby bin/rake nightman:all --silent >> #/home/tapirgo/app/shared/log/cron.log 2>&1"
-#        state=present
-#  when: process_runner == 'on'
 - include: unicorn.yml
