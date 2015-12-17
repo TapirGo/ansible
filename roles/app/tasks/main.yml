@@ -21,6 +21,9 @@
 - include: tapirgo.yml
   tags: tapirgo
 
+- include: letsencrypt.yml
+  tags: letsencrypt
+
 - name: Set ferm config for app servers
   template: dest=/etc/ferm/ferm.d/{{ item }}.conf
             src=etc/ferm/ferm.d/{{ item }}.conf.j2

@@ -27,7 +27,7 @@
 
 - name: Set tapirgo Nginx config
   template: dest=/etc/nginx/sites-available/tapirgo
-            src=etc/nginx/sites-available/tapirgo
+            src=etc/nginx/sites-available/tapirgo.j2
             owner=root group=root mode=0644
   notify: Restart nginx
 
