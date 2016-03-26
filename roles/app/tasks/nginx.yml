@@ -11,6 +11,10 @@
             src=etc/logrotate.d/nginx
             owner=root group=root mode=0644
 
+- name: Generate DH group
+  command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+           creates=/etc/ssl/certs/dhparam.pem
+
 - name: Set Nginx config
   template: dest=/etc/nginx/nginx.conf
             src=etc/nginx/nginx.conf

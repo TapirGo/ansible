@@ -1,3 +1,7 @@
 tapirgo ALL = NOPASSWD: /usr/sbin/service unicorn restart
 tapirgo ALL = NOPASSWD: /usr/sbin/service sidekiq restart
+tapirgo ALL = NOPASSWD: /usr/sbin/service sidekiq stop
+tapirgo ALL = NOPASSWD: /usr/sbin/service sidekiq start
 tapirgo ALL = NOPASSWD: /usr/sbin/service sidekiq-manager restart
+tapirgo ALL = NOPASSWD: /usr/sbin/service sidekiq-manager stop
+tapirgo ALL = NOPASSWD: /usr/sbin/service sidekiq-manager start

@@ -16,7 +16,7 @@
   register: ruby_path
 
 - name: Download Ruby source
-  get_url: url=http://cache.ruby-lang.org/pub/ruby/2.1/ruby-{{ ruby_version }}.tar.gz
+  get_url: url=http://cache.ruby-lang.org/pub/ruby/2.2/ruby-{{ ruby_version }}.tar.gz
            dest=/root/src
 
 - name: Extract Ruby source
@@ -25,7 +25,7 @@
 - name: Compile Ruby
   command: "{{ item }} chdir=/root/src/ruby-{{ ruby_version }}"
   with_items:
-    - ./configure --prefix=/opt/ruby/{{ ruby_version }} LIBS="-ljemalloc" CFLAGS="-march=nocona -O2 -pipe"
+    - ./configure --with-jemalloc --prefix=/opt/ruby/{{ ruby_version }} CFLAGS="-march=nocona -O2 -pipe"
     - make
     - make install
 
@@ -47,7 +47,6 @@
     - rdoc
     - ri
     - ruby
-    - testrb
   notify:
     - Upgrade unicorn
     - Restart sidekiq-manager

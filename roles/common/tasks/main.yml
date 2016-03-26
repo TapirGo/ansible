@@ -75,6 +75,10 @@
   apt: update-cache=yes
   tags: apt-get-upgrade
 
+- name: Install aptitude
+  apt: pkg=aptitude state=installed
+  tags: apt-get-upgrade
+
 - name: Upgrade packages
   apt: upgrade=safe
   tags: apt-get-upgrade

@@ -21,7 +21,7 @@
 - name: Trigger mongodb logrotate
   shell: "/bin/kill -SIGUSR1 'cat /var/lib/mongodb/mongod.lock 2> /dev/null' 2> /dev/null || true"
 
-- name: "Restart Elasticsearch"
+- name: Restart elasticsearch
   service: name=elasticsearch state=restarted
 
 - include: ../../../handlers.yml

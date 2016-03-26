@@ -21,4 +21,4 @@
 
 # Insure service is running.
 - name: MongoDB | Insure deamon is running correctly
-  service: name=mongodb state=started
+  service: name=mongod state=started

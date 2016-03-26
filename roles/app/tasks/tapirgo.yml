@@ -20,7 +20,7 @@
   template: dest=/etc/sudoers.d/tapirgo
             src=etc/sudoers.d/tapirgo
             owner=root group=root mode=0440
-
+  tags: sudoers
 - name: Place authorized_keys for tapirgo
   authorized_key: user=tapirgo
                   key='{{ item }}'
