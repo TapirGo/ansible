@@ -1,8 +1,7 @@
 ---
   letsencrypt_src_directory: /usr/local/share/letsencrypt
   letsencrypt_venv: "{{ letsencrypt_src_directory }}/env"
-  letsencrypt_cert_domains:
-    - "tapirgo.com"
+  letsencrypt_cert_domains: "{{domains}}"
   letsencrypt_webroot_path: /var/www/letsencrypt
   letsencrypt_authenticator: webroot
   letsencrypt_email: "help@tapirgo.com"

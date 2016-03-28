@@ -9,3 +9,7 @@ unicorn_worker_processes: 8
 number_of_sidekiq_workers: 1
 sidekiq_concurrency: 20
 max_sidekiq_oom: 800
+
+domains:
+  - "tapirgo.com"
+  - "www.tapirgo.com"
